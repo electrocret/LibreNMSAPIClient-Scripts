@@ -4,6 +4,9 @@
 
 This script's objective is to make LibreNMS API calls accessible via CLI, and provide some basic display and filtering functionality.
 
+## Deficiencies
+- POST,PATCH, and PUT functions currently don't work because logic to pull the object being set hasn't been written.
+
 ## Usage
 
 ```
@@ -15,21 +18,21 @@ lnmsa get_port_graphs 8 columns=ifInOctets_rate,ifName,ifAlias --sort ifInOctets
 ```
 
 
-
 ## Requirements
+Python Libraries:
+- click
+- pandas
+- rich
 
-- Python 3
-- LibreNMS with API enabled
-- API token with read and write privileges (write is optional)
 
+## Setup
+
+Download `lnmsa.py` as `lnmsa`, Make the script executable `chmod +x lnmsa`.
 
 ## Troubleshooting
 
 Some common issues:
 
-- Make sure the API URL and token in `.env` are correct
-- Check for connectivity issues reaching the LibreNMS API
-- Try increasing the request timeout if API calls are timing out
 - Ensure the API token has required permissions for call
 
 ## License
