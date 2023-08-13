@@ -13,7 +13,7 @@ Each script may have specific requirements, which should be outlined in its read
 
 Contributing 
 ------------
-- If you'd like to contribute a script, please fork, create a new folder, and create a pull request.
+- If you'd like to contribute a script, please fork, copy the example-script folder, make changes to the contents of the folder so others may use it, then create a pull request.
 - If you find an issue with a script, please create a pull request if you know how to fix it, otherwise please open an issue.
 
 
