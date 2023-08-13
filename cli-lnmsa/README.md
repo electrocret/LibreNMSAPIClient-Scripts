@@ -2,7 +2,7 @@
 
 ## Overview
 
-This script's objective is to make LibreNMS API calls accessible via CLI, and provide some basic display and filtering functionality.
+This script's objective is to make LibreNMS API calls accessible via CLI, and provide some basic output and filtering functionality.
 
 ## Deficiencies
 - POST,PATCH, and PUT functions currently don't work because logic to pull the object being set out of parameters hasn't been written.
