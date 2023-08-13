@@ -9,14 +9,23 @@ This script's objective is to make LibreNMS API calls accessible via CLI, and pr
 
 ## Usage
 
+Basic command structure
 ```
 lnmsa <api function> <parameters>
 ```
 
+Find Top ifInOctets for a device's ports
 ```
-lnmsa get_port_graphs 8 columns=ifInOctets_rate,ifName,ifAlias --sort ifInOctets_rate
+lnmsa get_port_graphs <device-id> columns=ifInOctets_rate,ifName,ifAlias --sort ifInOctets_rate
 ```
-
+View Available functions
+```
+lnmsa
+```
+View lnmsa help
+```
+lnmsa --help
+```
 
 ## Requirements
 Python Libraries:
