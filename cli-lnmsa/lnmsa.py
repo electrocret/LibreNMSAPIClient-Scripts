@@ -9,13 +9,14 @@ from rich.console import Console
 from rich.table import Table
 from typing import Optional
 import json
+import re
 libreapi=LibreNMSAPIClient()
 console=Console()
 
 def df_to_table( #From: https://gist.github.com/avi-perl/83e77d069d97edbdde188a4f41a015c4
     pandas_dataframe: pd.DataFrame,
     rich_table: Table,
-    show_index: bool = True,
+    show_index: bool = False,
     index_name: Optional[str] = None,
 ) -> Table:
     """Convert a pandas.DataFrame obj into a rich.Table obj.
@@ -61,12 +62,14 @@ def list_functions():
 @click.option('--xlsx',help='Write output to xlsx at specified location')
 @click.option('--csv',help='Write output to csv at specified location')
 @click.option('-c','--columns',help='Comma List of Columns to show')
-@click.option('-s', '--sort',help='Column to sort data by')
+@click.option('-s','--search', type=(str, str),help='Search Column',multiple=True,metavar='<column> <regex>')
+@click.option('-f','--filter', type=(str, str),help='Filter Column',multiple=True,metavar='<column> <regex>')
+@click.option('-so', '--sort',help='Column to sort data by')
 @click.option('-sa','--sort_ascending', help='Sort data in Ascending Order',is_flag=True,default=False)
 @click.option('-h','--human_readable', help='Convert Columns into human readable - WIP',is_flag=True,default=False)
 @click.option('-n','--rows',help='Number of rows to show. (or use paging)',default=20)
 @click.option('-p','--paging', help='Page output. (Rows is ignored)',is_flag=True,default=False)
-def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,paging):
+def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,paging,search,filter):
     '''
     This Script makes the LibreNMS API endpoints accessible through commandline.
     The command structure for GET, and DELETE request methods is 'lnmsa <function> <parameters>'
@@ -112,24 +115,33 @@ def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,pag
             print(str(err))
             exit()
         data=pd.DataFrame(response if type(response) is list else [response])
-        if sort:
-            if sort in data:
-                data.sort_values(by=[sort], ascending=sort_ascending,inplace=True)
-                data.reset_index(drop=True,inplace=True)
-            else:
-                console.print("[red]Sort Column not found[/red]")
+        response_columns=data.columns
+        for verify_column in [sort,*dict((x, y) for x, y in search).keys(),*dict((x, y) for x, y in filter).keys()]:
+            if type(verify_column) == str and verify_column not in data:
+                console.print("[red]Column '" + verify_column + "' not found in response[/red]")
                 exit()
+        if sort:
+            data.sort_values(by=[sort], ascending=sort_ascending,inplace=True)
+            data.reset_index(drop=True,inplace=True)
+        if search:
+            for scol,sreg in dict((x, y) for x, y in search).items():
+                data=data[data[scol].apply(lambda x: True if re.search(sreg,x)else False)]
+            data.reset_index(drop=True,inplace=True)
+        if filter:
+            for fcol,freg in dict((x, y) for x, y in filter).items():
+                data=data[data[fcol].apply(lambda x: True if re.search(freg,x)else False)]
+            data.reset_index(drop=True,inplace=True)
+        #if human_readable:
+
         if columns:
             data=data.filter(items=columns.split(","))
-        #if human_readable:
-            
         if xlsx == None and csv == None:
             try:
                 table = Table(show_header=True, header_style="bold magenta")
                 table.row_styles = ["none", "dim"]
                 table.box = box.ROUNDED
                 console.print("[blue]Data Shape:[/blue] " + str(data.shape) + " - [red]Only showing first " + str(rows) + " rows.(See help --rows)[/red]") if not paging and data.shape[0] != 1 and type(rows) is  int and rows < data.shape[0] else console.print("[blue]Data Shape:[/blue] " + str(data.shape))
-                console.print("[blue]Columns:[/blue] " + ','.join(data.columns)+" [red](See help --columns)[/red]")if len(data.columns) > 5 else console.print("[blue]Columns:[/blue] " + ','.join(data.columns))
+                console.print("[blue]Columns:[/blue] " + ','.join(response_columns)+" [red](See help --columns)[/red]")if len(data.columns) > 5 else console.print("[blue]Columns:[/blue] " + ','.join(response_columns))
                 console.print("\n[bold cyan]Data from Libre:[/bold cyan]")
                 if data.shape[0] == 1:
                     table.add_column("Key")
