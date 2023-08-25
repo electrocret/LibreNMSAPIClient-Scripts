@@ -93,7 +93,7 @@ def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,pag
                 first=False
                 if param not in libreapi.functions:
                     sfunction_name=param.split('_',1) #Check for flags in function call
-                    if 1 in sfunction_name and sfunction_name[1] in libreapi.functions:
+                    if len(sfunction_name) == 2 and sfunction_name[1] in libreapi.functions:
                         function_name=sfunction_name[1]
                     else:
                         console.print("[red]Invalid Function provided[/red]")
