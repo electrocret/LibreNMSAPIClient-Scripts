@@ -11,9 +11,13 @@ Basic command structure
 lnmsa <api function> <parameters>
 ```
 
-Find Top ifInOctets for a device's ports
+Find Top ifInOctets for a device's ports (Example of sorting and using columns)
 ```
 lnmsa get_port_graphs <device-id> columns=ifInOctets_rate,ifName,ifAlias --sort ifInOctets_rate
+```
+Delete bills with no ports associated with them. (Example of nesting calls)
+```
+ lnmsa delete_bill $(lnmsa list_bills -f ports '\[\]' -i bill_id)
 ```
 View Available functions
 ```

@@ -69,7 +69,8 @@ def list_functions():
 @click.option('-h','--human_readable', help='Convert Columns into human readable - WIP',is_flag=True,default=False)
 @click.option('-n','--rows',help='Number of rows to show. (or use paging)',default=20)
 @click.option('-p','--paging', help='Page output. (Rows is ignored)',is_flag=True,default=False)
-def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,paging,search,filter):
+@click.option('-i','--input_param', help='Printed output is formatted as an parameter input')
+def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,paging,search,filter,input_param):
     '''
     This Script makes the LibreNMS API endpoints accessible through commandline.
     The command structure for GET, and DELETE request methods is 'lnmsa <function> <parameters>'
@@ -83,31 +84,23 @@ def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,pag
         first=True
         params=[]
         function=""
-        req_method=""
         for param in parameters:
             if first:
+                param='c'+ param if param not in libreapi.functions else 'c_' + param
                 try:
                     function=libreapi.__getattr__(param)
                 except:
-                    pass
+                    console.print("[red]Invalid Function provided[/red]")
+                    list_functions()
+                    exit()
                 first=False
-                if param not in libreapi.functions:
-                    sfunction_name=param.split('_',1) #Check for flags in function call
-                    if 1 in sfunction_name and sfunction_name[1] in libreapi.functions:
-                        function_name=sfunction_name[1]
-                    else:
-                        console.print("[red]Invalid Function provided[/red]")
-                        list_functions()
-                        exit()
-                else:
-                    function_name=param
-                req_method=libreapi.functions[function_name]['request_method']
             else:
-                if req_method in 'POST,PATCH,PUT':
-                    param=json.loads(param)
-                    req_method=None
-                params.append(param)
-        console.print("[cyan]Requesting Data from Libre[/cyan]")
+                try:
+                    params.append(json.loads(param))
+                except:
+                    params.append(param)
+        if not input_param:
+            console.print("[cyan]Requesting Data from Libre[/cyan]")
         try:
             response=function(*params)
         except Exception as err:
@@ -135,13 +128,16 @@ def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,pag
 
         if columns:
             data=data.filter(items=columns.split(","))
-        if xlsx == None and csv == None:
+        if input_param:
+            print(json.dumps(data[input_param].to_list()).replace(" ", ""))
+        elif xlsx == None and csv == None:
             try:
                 table = Table(show_header=True, header_style="bold magenta")
                 table.row_styles = ["none", "dim"]
                 table.box = box.ROUNDED
                 console.print("[blue]Data Shape:[/blue] " + str(data.shape) + " - [red]Only showing first " + str(rows) + " rows.(See help --rows)[/red]") if not paging and data.shape[0] != 1 and type(rows) is  int and rows < data.shape[0] else console.print("[blue]Data Shape:[/blue] " + str(data.shape))
-                console.print("[blue]Columns:[/blue] " + ','.join(response_columns)+" [red](See help --columns)[/red]")if len(data.columns) > 5 else console.print("[blue]Columns:[/blue] " + ','.join(response_columns))
+                column_list=','.join(str(x) for x in response_columns)
+                console.print("[blue]Columns:[/blue] " + column_list +" [red](See help --columns)[/red]")if len(data.columns) > 5 else console.print("[blue]Columns:[/blue] " + column_list)
                 console.print("\n[bold cyan]Data from Libre:[/bold cyan]")
                 if data.shape[0] == 1:
                     table.add_column("Key")
@@ -168,7 +164,7 @@ def main(parameters,xlsx,csv,sort,sort_ascending,human_readable,columns,rows,pag
                 filepath = Path(csv)  
                 filepath.parent.mkdir(parents=True, exist_ok=True)  
                 data.to_csv(filepath,index=False)
-            console.print("[bold cyan]Data written to file[/bold cyan]")
+            console.print("[bold cyan]Data written to "+ (xlsx if xlsx else csv)+ "[/bold cyan]")
                 
 
 if __name__ == '__main__':
