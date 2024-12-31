@@ -2,11 +2,11 @@
 
 ## Overview
 
-This script gets a device list, then divides the count of devices by discovery interval, then triggers a discovery for every device spreading them evenly over the discovery interval.
+This script spaces out device discoveries over your discovery interval. On large Librenms deployments, overtime device discoveries can get bunched together causing interruptions in polling & long polling times due to SQL DB locks.
 
 ## Usage
 
-This script spaces out device discoveries over your discovery interval. On large Librenms deployments, overtime device discoveries can get bunched together causing interruptions in polling & long polling times due to SQL DB locks.
+Execute script
 
 ## Requirements
 
